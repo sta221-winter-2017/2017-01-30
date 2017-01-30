@@ -1,0 +1,167 @@
+---
+title: "STA221"
+author: "Neil Montgomery"
+date: "Last edited: `r format(Sys.time(), '%Y-%m-%d %H:%M')`"
+output: 
+  beamer_presentation:
+    keep_tex: TRUE
+    incremental: TRUE
+    df_print: tibble
+    fig_caption: FALSE
+classoption: aspectratio=169
+header-includes:
+- \newcommand{\ve}{\varepsilon}
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE,
+                      dev='pdf', fig.width=4, fig.asp=0.618, fig.align='center')
+options(tibble.width=70, scipen = 999, tibble.print_min=5)
+library(tidyverse)
+library(readxl)
+```
+
+# regression
+
+## linear models
+
+Basic model: Output = Input + Noise
+
+You've seen a few of these already; perhaps not expressed this way.
+
+\pause The "one sample t-test" can be thought of a way to analyze data that can be modeled as:
+$$Y_i = \mu + \ve_i$$
+where $\ve_i$ are independent $N(0,\sigma)$ and $n$ is the sample size.
+
+\pause The "two sample t-test" could be modeled as:
+$$Y_{ij} = \mu_i + \varepsilon_{ij}$$
+where $i=1,2$ and the $\mu_i$ are the two population means. (There are a few ways to treat the $\ve_{ij}$.)
+
+## several numerical variables
+
+Suppose your dataset has a numerical variable we'll call $y$ and other variable (typically also numerical) called $x$. Most datasets will have several!
+
+\pause Let's consider the male body fat dataset that is discussed in the textbook (Chapter 24).
+
+```{r}
+bodyfat <- read_csv("Body_fat.csv")
+bodyfat
+```
+
+## body fat EDA
+
+```{r}
+source("multiplot.R")
+p1 <- bodyfat %>% 
+  ggplot(aes(x=Weight, y=`Pct BF`)) + geom_point()
+p2 <- bodyfat %>% 
+  ggplot(aes(x=Height, y=`Pct BF`)) + geom_point()
+multiplot(p1,p2,cols=2)
+```
+
+## linear model for two numerical variables
+
+When there is a linear relationship between two variables, we might propose a linear model such as:
+
+\pause `Pct BF` = `Weight` + noise
+
+\pause `Pct BF` = `Height` + noise
+
+\pause In general:
+$$y = \beta_0 + \beta_1 x + \ve$$
+where $y$ and $x$ are the variables and $\ve$ is the random noise.
+
+\pause When there are only two variables this is called a *simple regression model.*
+
+\pause The *parameter* $\beta_1$ is the slope of the line and is of primary interest. (The parameter $\beta_0$ is the $y$-intercept and not normally of any interest.)
+
+## model details; terminology
+
+$y$ and $x$ are *not* interchangeable; i.e. these are completely different:
+$$y = \beta_0 + \beta_1 x + \ve \qquad \qquad x = \beta_0 + \beta_1 x + \ve$$
+
+\pause $y$ can be called the "output" variable and $x$ can be called the "input" variable. I think these are the best names.
+
+\pause I don't mind called them "response" and "predictor".
+
+\pause I hate "dependent" and "independent" variables. These words are already being used by an important concept in probability.
+
+\pause Think of the model from the inside and move out. It starts with $x$, which can be anything. 
+
+* It doesn't have to be random. 
+
+* It could be a pre-specified grid of values.
+
+* The "grid" could consist of as few as two values!
+
+## model details
+
+Starting from the inside with $x$. Now consider the line $\mu_y = \beta_0 + \beta_1 x$.
+
+\pause $\mu_y$ is intended to suggest the (theoretical) mean of $y$ at any $x$ value. (I might have put $\mu_y(x)$ to emphasize the role of $x$.)
+
+\pause This line is the basis of the relationship between input and output. 
+
+\pause Finally, to this line we add some random noise $\ve$ to get the final model:
+$$y = \beta_0 + \beta_1 x + \ve$$
+
+\pause For the moment we'll put these requirements on the random noise:
+
+* the noise has constant variation
+
+* the noise for each observation is independent
+
+\pause We'll add another requirement when the time comes.
+
+## estimating the slope (and intercept)
+
+Now we proceed through the typical steps of a data analysis (the $\chi^2$ procedures were an exception!)
+
+* We have a model with unknown parameters.
+
+* So we gather data, and use the data to estimate the paramaters. 
+
+* Use probability to make inferences using these estimates.
+
+\pause The classic method of regression parameter estimation given data is called *least squares regression*. 
+
+* The data come in pairs $(y_1, x_1), (y_2, x_2), \ldots (y_n, x_n)$. 
+
+* For any "candidate" slope $b^*_0$ and intercept $b^*_1$ we could construct the set of "predictions" $\hat{y}_i = b^*_0 + b^*_1 x_i$ and their "residuals" $\ve_i = y_i - \hat{y}_i$
+
+## more least squares
+
+Here's the actual "least squares" part...
+
+It is possible to find the unique slope and intercept that makes this sum of squared residuals:
+$$\sum\limits_{i=1}^n e_i^2 = \sum\limits_{i=1}^n (y_i - (b_0^*+b_1^* y_i))^2$$
+\textit{as small as possible.}
+
+We'll call the unique intercept and slope $b_0$ and $b_1$, respectively. 
+
+\pause (More common to call them $\hat\beta_0$ and $\hat\beta_1$.)
+
+\pause The formula for the slope estimator $b_1$ turns out to be:
+$$b_1 = \frac{\sum (x_i - \overline x)(y_i - \overline y)}{\sqrt{\sum (x_i - \overline{x})^2}} = \frac{S_{xy}}{S_{xx}}$$
+
+\pause The formula for the intercept is $b_0 = \overline y - b_1 \overline x$
+
+## body fat examples
+
+Here are the plots with the least squares regression lines added:
+
+```{r}
+p1_line <- p1 + geom_smooth(method=lm, se=FALSE)
+p2_line <- p2 + geom_smooth(method=lm, se=FALSE)
+multiplot(p1_line, p2_line, cols=2)
+```
+
+## bodyfat calculation examples
+
+Obviously don't do these by hand! Here is basic `R` regression output:
+
+```{r}
+lm(`Pct BF` ~ Weight, data = bodyfat)
+lm(`Pct BF` ~ Height, data = bodyfat)
+```
+
