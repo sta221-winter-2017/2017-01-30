@@ -141,8 +141,8 @@ We'll call the unique intercept and slope $b_0$ and $b_1$, respectively.
 
 \pause (More common to call them $\hat\beta_0$ and $\hat\beta_1$.)
 
-\pause The formula for the slope estimator $b_1$ turns out to be:
-$$b_1 = \frac{\sum (x_i - \overline x)(y_i - \overline y)}{\sqrt{\sum (x_i - \overline{x})^2}} = \frac{S_{xy}}{S_{xx}}$$
+\pause The formula for the slope estimator $b_1$ turns out to be (corrected from class!):
+$$b_1 = \frac{\sum (x_i - \overline x)(y_i - \overline y)}{{\sum (x_i - \overline{x})^2}} = \frac{S_{xy}}{S_{xx}}$$
 
 \pause The formula for the intercept is $b_0 = \overline y - b_1 \overline x$
 
